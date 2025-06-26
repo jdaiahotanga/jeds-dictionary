@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World-Class Dictionary</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter for a modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right bottom, #4CAF50, #2196F3); /* Green to Blue gradient */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            padding: 2.5rem;
+            max-width: 900px; /* Increased max width */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .search-input, .language-select {
+            border: 2px solid #D1D5DB;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .search-input:focus, .language-select:focus {
+            border-color: #6366F1; /* Indigo focus color */
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        .search-button {
+            background: linear-gradient(to right, #6366F1, #8B5CF6); /* Indigo to Violet gradient */
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .search-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+        .search-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .definition-section {
+            border-top: 1px solid #E5E7EB;
+            padding-top: 1.5rem;
+        }
+        .definition-list li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        .definition-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #6366F1;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        .part-of-speech {
+            font-style: italic;
+            color: #4B5563; /* Gray-600 */
+        }
+        .audio-button {
+            background-color: #10B981; /* Emerald-500 */
+            color: white;
+            border-radius: 9999px; /* Fully rounded */
+            padding: 0.5rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .audio-button:hover {
+            background-color: #059669; /* Emerald-600 */
+            transform: translateY(-1px);
+        }
+        .llm-button {
+            background: linear-gradient(to right, #F59E0B, #F97316); /* Amber to Orange gradient */
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-shrink: 0;
+        }
+        .llm-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+        .llm-button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 6px rgba(245, 158, 11, 0.2);
+        }
+        .llm-button:disabled {
+            background: #D1D5DB;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .error-message {
+            background-color: #FEE2E2; /* Red-100 */
+            color: #DC2626; /* Red-600 */
+            border: 1px solid #EF4444; /* Red-500 */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366F1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        .llm-loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #F97316; /* Orange */
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+            margin-left: 0.5rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .translation-loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #8B5CF6; /* Violet */
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="card">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">
+            World-Class Dictionary
+        </h1>
+
+        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <input
+                type="text"
+                id="wordInput"
+                placeholder="Enter a word, name, or phrase..."
+                class="search-input flex-grow"
+            />
+            <select id="languageSelect" class="language-select">
+                <option value="ar">العربية (Arabic)</option>
+                <option value="zh">中文 (Chinese)</option>
+                <option value="cs">Čeština (Czech)</option>
+                <option value="de">Deutsch (German)</option>
+                <option value="en">English</option>
+                <option value="es">Español (Spanish)</option>
+                <option value="fa">فارسی (Persian)</option>
+                <option value="fr">Français (French)</option>
+                <option value="hi">हिन्दी (Hindi)</option>
+                <option value="it">Italiano (Italian)</option>
+                <option value="ja">日本語 (Japanese)</option>
+                <option value="ko">한국어 (Korean)</option>
+                <option value="ms">Bahasa Melayu (Malay)</option>
+                <option value="pt-BR">Português (Brazilian)</option>
+                <option value="ru">Русский (Russian)</option>
+                <option value="tr">Türkçe (Turkish)</option>
+            </select>
+            <button id="searchButton" class="search-button">
+                <i class="fas fa-search"></i> Search
+                <span id="translationLoading" class="translation-loading-spinner hidden"></span>
+            </button>
+        </div>
+
+        <div id="loadingIndicator" class="hidden text-center">
+            <div class="loading-spinner mx-auto"></div>
+            <p class="mt-2 text-gray-600">Loading definitions...</p>
+        </div>
+
+        <div id="errorMessage" class="hidden error-message">
+            <!-- Error messages will be displayed here -->
+        </div>
+
+        <div id="results" class="definition-section hidden">
+            <div class="flex items-center gap-4 mb-4">
+                <h2 id="wordDisplay" class="text-3xl font-bold text-gray-900"></h2>
+                <span id="phoneticDisplay" class="text-xl text-gray-600"></span>
+                <button id="audioButton" class="audio-button hidden">
+                    <i class="fas fa-volume-up"></i> Listen
+                </button>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-4">
+                <button id="generateExamplesButton" class="llm-button">
+                    ✨ Generate Examples
+                    <span id="examplesLoading" class="llm-loading-spinner hidden"></span>
+                </button>
+                <button id="simplifyDefinitionButton" class="llm-button">
+                    ✨ Simplify Definition
+                    <span id="simplifyLoading" class="llm-loading-spinner hidden"></span>
+                </button>
+                <button id="getNameMeaningButton" class="llm-button">
+                    🌟 Get Name Meaning
+                    <span id="nameMeaningLoading" class="llm-loading-spinner hidden"></span>
+                </button>
+                <button id="suggestRelatedWordsButton" class="llm-button">
+                    💡 Suggest Related Words
+                    <span id="relatedWordsLoading" class="llm-loading-spinner hidden"></span>
+                </button>
+            </div>
+
+            <div id="llmExamplesContainer" class="mt-6 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">AI-Generated Examples:</h3>
+                <div id="llmExamplesContent" class="bg-gray-50 p-4 rounded-lg shadow-inner text-gray-700 leading-relaxed"></div>
+            </div>
+
+            <div id="llmSimplifiedDefinitionContainer" class="mt-6 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Simplified Definition:</h3>
+                <div id="llmSimplifiedDefinitionContent" class="bg-gray-50 p-4 rounded-lg shadow-inner text-gray-700 leading-relaxed"></div>
+            </div>
+
+            <div id="llmNameMeaningContainer" class="mt-6 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Name Meaning:</h3>
+                <div id="llmNameMeaningContent" class="bg-gray-50 p-4 rounded-lg shadow-inner text-gray-700 leading-relaxed"></div>
+            </div>
+
+            <div id="llmRelatedWordsContainer" class="mt-6 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Related Words/Concepts:</h3>
+                <div id="llmRelatedWordsContent" class="bg-gray-50 p-4 rounded-lg shadow-inner text-gray-700 leading-relaxed"></div>
+            </div>
+
+            <div id="meaningsContainer" class="space-y-6 mt-6">
+                <!-- Meanings will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const wordInput = document.getElementById('wordInput');
+        const languageSelect = document.getElementById('languageSelect');
+        const searchButton = document.getElementById('searchButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultsDiv = document.getElementById('results');
+        const wordDisplay = document.getElementById('wordDisplay');
+        const phoneticDisplay = document.getElementById('phoneticDisplay');
+        const audioButton = document.getElementById('audioButton');
+        const meaningsContainer = document.getElementById('meaningsContainer');
+        const translationLoading = document.getElementById('translationLoading');
+
+        // LLM related elements
+        const generateExamplesButton = document.getElementById('generateExamplesButton');
+        const simplifyDefinitionButton = document.getElementById('simplifyDefinitionButton');
+        const getNameMeaningButton = document.getElementById('getNameMeaningButton');
+        const suggestRelatedWordsButton = document.getElementById('suggestRelatedWordsButton');
+        const llmExamplesContainer = document.getElementById('llmExamplesContainer');
+        const llmExamplesContent = document.getElementById('llmExamplesContent');
+        const llmSimplifiedDefinitionContainer = document.getElementById('llmSimplifiedDefinitionContainer');
+        const llmSimplifiedDefinitionContent = document.getElementById('llmSimplifiedDefinitionContent');
+        const llmNameMeaningContainer = document.getElementById('llmNameMeaningContainer');
+        const llmNameMeaningContent = document.getElementById('llmNameMeaningContent');
+        const llmRelatedWordsContainer = document.getElementById('llmRelatedWordsContainer');
+        const llmRelatedWordsContent = document.getElementById('llmRelatedWordsContent');
+        const examplesLoading = document.getElementById('examplesLoading');
+        const simplifyLoading = document.getElementById('simplifyLoading');
+        const nameMeaningLoading = document.getElementById('nameMeaningLoading');
+        const relatedWordsLoading = document.getElementById('relatedWordsLoading');
+
+        let originalInputWord = ''; // To store the word typed before translation
+
+        // Function to clear previous results and error messages
+        function clearResults() {
+            resultsDiv.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            meaningsContainer.innerHTML = '';
+            audioButton.classList.add('hidden');
+            wordInput.classList.remove('border-red-500'); // Remove error highlight
+
+            // Clear LLM results as well
+            llmExamplesContainer.classList.add('hidden');
+            llmExamplesContent.innerHTML = '';
+            llmSimplifiedDefinitionContainer.classList.add('hidden');
+            llmSimplifiedDefinitionContent.innerHTML = '';
+            llmNameMeaningContainer.classList.add('hidden');
+            llmNameMeaningContent.innerHTML = '';
+            llmRelatedWordsContainer.classList.add('hidden');
+            llmRelatedWordsContent.innerHTML = '';
+
+
+            // Disable LLM buttons
+            generateExamplesButton.disabled = true;
+            simplifyDefinitionButton.disabled = true;
+            getNameMeaningButton.disabled = true;
+            suggestRelatedWordsButton.disabled = true;
+        }
+
+        // Function to display an error message
+        function displayError(message) {
+            clearResults();
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            wordInput.classList.add('border-red-500'); // Highlight input on error
+        }
+
+        // Function to fetch data from a real dictionary API
+        async function fetchWordDefinition(word, lang) {
+            loadingIndicator.classList.remove('hidden');
+            clearResults(); // Clear previous results before showing loading
+
+            const apiUrl = `https://api.dictionaryapi.dev/api/v2/entries/${lang}/${word}`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    // Check if the response status is 404 (Not Found)
+                    if (response.status === 404) {
+                        return []; // Return empty array to indicate word not found
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error("Error fetching definition:", error);
+                // Re-throw to be caught by the main search function's try/catch
+                throw error;
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Function to speak the word
+        function speakWord(word, lang) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = lang; // Set language based on selection
+                utterance.volume = 1; // 0 to 1
+                utterance.rate = 1; // 0.1 to 10
+                utterance.pitch = 1; // 0 to 2
+                speechSynthesis.speak(utterance);
+            } else {
+                displayError("Your browser does not support speech synthesis.");
+            }
+        }
+
+        // SIMULATED TRANSLATION FUNCTION (for display only, not used for actual search query)
+        async function translateInputWord(word, targetLang) {
+            const lowerCaseWord = word.toLowerCase();
+            if (!lowerCaseWord) return '';
+
+            translationLoading.classList.remove('hidden'); // Show loading spinner
+            searchButton.disabled = true; // Disable search button during translation
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    let translatedWord = word; // Default to original if no specific translation
+
+                    // This is a VERY simplified and hardcoded simulation.
+                    // A real application would use a robust translation API here.
+                    const translations = {
+                        "hello": {
+                            "es": "hola", "fr": "bonjour", "de": "hallo", "ar": "مرحبا",
+                            "zh": "你好", "ja": "こんにちは", "ko": "안녕하세요", "ru": "привет",
+                            "hi": "नमस्ते", "it": "ciao", "tr": "merhaba", "ms": "helo",
+                            "fa": "سلام", "pt-BR": "olá", "cs": "Ahoj"
+                        },
+                        "hi": {
+                            "es": "hola", "fr": "salut", "de": "hi", "ar": "مرحبا",
+                            "zh": "你好", "ja": "こんにちは", "ko": "안녕", "ru": "привет",
+                            "hi": "नमस्ते", "it": "ciao", "tr": "merhaba", "ms": "hai",
+                            "fa": "سلام", "pt-BR": "oi", "cs": "Ahoj"
+                        },
+                        "world": {
+                            "es": "mundo", "fr": "monde", "de": "welt", "ar": "عالم",
+                            "zh": "世界", "ja": "世界", "ko": "세계", "ru": "мир",
+                            "hi": "दुनिया", "it": "mondo", "tr": "dünya", "ms": "dunia",
+                            "fa": "جهان", "pt-BR": "mundo", "cs": "svět"
+                        },
+                        "developer": {
+                            "es": "desarrollador", "fr": "développeur", "de": "entwickler", "ar": "مطور",
+                            "zh": "开发者", "ja": "開発者", "ko": "개발자", "ru": "разработчик",
+                            "hi": "डेवलपर", "it": "sviluppatore", "tr": "geliştirici", "ms": "pembangun",
+                            "fa": "توسعه دهنده", "pt-BR": "desenvolvedor", "cs": "vývojář"
+                        },
+                        "apple": {
+                            "es": "manzana", "fr": "pomme", "de": "apfel", "zh": "苹果"
+                        },
+                        "new york": { // Example for two words
+                            "es": "nueva york", "fr": "new york", "de": "new york", "zh": "纽约"
+                        }
+                    };
+
+                    if (translations[lowerCaseWord] && translations[lowerCaseWord][targetLang]) {
+                        translatedWord = translations[lowerCaseWord][targetLang];
+                        console.log(`Simulated translation: "${word}" to "${translatedWord}" for ${targetLang}`);
+                    } else {
+                        console.log(`No simulated translation for "${word}" to ${targetLang}. Using original word.`);
+                    }
+
+                    translationLoading.classList.add('hidden'); // Hide loading spinner
+                    searchButton.disabled = false; // Re-enable search button
+                    resolve(translatedWord);
+                }, 800); // Simulate network delay for translation
+            });
+        }
+
+        // --- LLM Powered Features ---
+
+        async function callGeminiAPI(prompt, loadingSpinnerElement, targetContentElement) {
+            loadingSpinnerElement.classList.remove('hidden');
+            targetContentElement.innerHTML = ''; // Clear previous LLM content
+            targetContentElement.parentElement.classList.remove('hidden'); // Show LLM section container
+
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+            // Replace "YOUR_API_KEY_HERE" with your actual Gemini API key.
+            // You can obtain it from Google AI Studio: https://aistudio.google.com/app/apikey
+            const apiKey = "AIzaSyBXPJbMLhNofeJ_yFK8AWkAYr2aNof2AEg"; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json(); // Try to parse error response
+                    console.error("Gemini API Error - HTTP Status:", response.status);
+                    console.error("Gemini API Error - Response Body:", errorBody);
+                    targetContentElement.textContent = `Error: ${errorBody.error?.message || 'Unknown API error.'} Please try again.`;
+                    return; // Exit if response is not OK
+                }
+
+                const result = await response.json();
+                console.log("Gemini API Raw Result:", result); // Log raw result for debugging
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    targetContentElement.innerHTML = text.replace(/\n/g, '<br>'); // Display text, preserving newlines
+                } else {
+                    console.error("Gemini API - Unexpected response structure:", result);
+                    targetContentElement.textContent = "Could not generate content. Unexpected API response. Please try again.";
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                targetContentElement.textContent = "Error generating content. Check browser console for details.";
+            } finally {
+                loadingSpinnerElement.classList.add('hidden');
+            }
+        }
+
+        async function generateLLMExamples() {
+            // Use the word/phrase currently displayed in the results section, or input if no dictionary result
+            const wordOrPhrase = wordDisplay.textContent.trim() || wordInput.value.trim();
+            const selectedLanguage = languageSelect.value;
+            if (!wordOrPhrase) {
+                llmExamplesContent.textContent = "Please enter a word or phrase first.";
+                llmExamplesContainer.classList.remove('hidden');
+                return;
+            }
+
+            generateExamplesButton.disabled = true;
+            simplifyDefinitionButton.disabled = true;
+            getNameMeaningButton.disabled = true;
+            suggestRelatedWordsButton.disabled = true;
+
+            const prompt = `Generate 3 diverse example sentences using the phrase or word "${wordOrPhrase}" to demonstrate its different contexts or meanings. The sentences should be in ${languageSelect.options[languageSelect.selectedIndex].text}. Use a clear, numbered list format.`;
+            await callGeminiAPI(prompt, examplesLoading, llmExamplesContent);
+
+            generateExamplesButton.disabled = false;
+            simplifyDefinitionButton.disabled = false;
+            getNameMeaningButton.disabled = false;
+            suggestRelatedWordsButton.disabled = false;
+        }
+
+        async function simplifyLLMDefinition() {
+            const wordOrPhrase = wordDisplay.textContent.trim() || wordInput.value.trim();
+            const selectedLanguage = languageSelect.value;
+            if (!wordOrPhrase) {
+                llmSimplifiedDefinitionContent.textContent = "Please enter a word or phrase first.";
+                llmSimplifiedDefinitionContainer.classList.remove('hidden');
+                return;
+            }
+
+            // Collect all definitions currently displayed
+            let fullDefinitionText = '';
+            const meaningDivs = meaningsContainer.querySelectorAll('.mb-4');
+            meaningDivs.forEach(meaningDiv => {
+                const partOfSpeech = meaningDiv.querySelector('h3')?.textContent || '';
+                fullDefinitionText += `Part of Speech: ${partOfSpeech}\n`;
+                meaningDiv.querySelectorAll('.definition-list li').forEach(li => {
+                    const defText = li.childNodes[0].textContent.trim();
+                    fullDefinitionText += `- ${defText}\n`;
+                });
+                fullDefinitionText += '\n';
+            });
+
+            if (!fullDefinitionText) {
+                llmSimplifiedDefinitionContent.textContent = "No dictionary definition found to simplify. Trying to simplify based on the phrase itself.";
+                // If no dictionary definition, try to simplify the concept of the phrase directly
+                const prompt = `Simplify the concept of "${wordOrPhrase}" into ${languageSelect.options[languageSelect.selectedIndex].text} for a general audience. Provide a concise and easy-to-understand explanation.`;
+                await callGeminiAPI(prompt, simplifyLoading, llmSimplifiedDefinitionContent);
+            } else {
+                 const prompt = `Simplify the following definition(s) for the word/phrase "${wordOrPhrase}" into ${languageSelect.options[languageSelect.selectedIndex].text} for a general audience or someone learning the language. Provide a concise and easy-to-understand explanation, maintaining the core meaning.
+                \n---\n
+                ${fullDefinitionText}
+                \n---`;
+                await callGeminiAPI(prompt, simplifyLoading, llmSimplifiedDefinitionContent);
+            }
+
+
+            generateExamplesButton.disabled = false;
+            simplifyDefinitionButton.disabled = false;
+            getNameMeaningButton.disabled = false;
+            suggestRelatedWordsButton.disabled = false;
+        }
+
+        async function getNameMeaning() {
+            const name = wordInput.value.trim(); // Always use input for names
+            const selectedLanguage = languageSelect.value;
+            if (!name) {
+                llmNameMeaningContent.textContent = "Please enter a name to search.";
+                llmNameMeaningContainer.classList.remove('hidden');
+                return;
+            }
+
+            generateExamplesButton.disabled = true;
+            simplifyDefinitionButton.disabled = true;
+            getNameMeaningButton.disabled = true;
+            suggestRelatedWordsButton.disabled = true;
+
+            const prompt = `What is the meaning and origin of the name "${name}"? Please provide a concise explanation in ${selectedLanguage}. If it's a common name, mention its popularity or cultural significance.`;
+            await callGeminiAPI(prompt, nameMeaningLoading, llmNameMeaningContent);
+
+            generateExamplesButton.disabled = false;
+            simplifyDefinitionButton.disabled = false;
+            getNameMeaningButton.disabled = false;
+            suggestRelatedWordsButton.disabled = false;
+        }
+
+        async function suggestRelatedWords() {
+            const wordOrPhrase = wordDisplay.textContent.trim() || wordInput.value.trim(); // Use displayed word or raw input
+            const selectedLanguage = languageSelect.value;
+            if (!wordOrPhrase) {
+                llmRelatedWordsContent.textContent = "Please enter a word or phrase first to get related terms.";
+                llmRelatedWordsContainer.classList.remove('hidden');
+                return;
+            }
+
+            generateExamplesButton.disabled = true;
+            simplifyDefinitionButton.disabled = true;
+            getNameMeaningButton.disabled = true;
+            suggestRelatedWordsButton.disabled = true;
+
+            const prompt = `For the word/concept "${wordOrPhrase}", suggest 5-7 closely related words, concepts, or fields of study. Provide them as a comma-separated list or a bulleted list in ${selectedLanguage}. Do not include a preamble or extensive explanation, just the related terms.`;
+            await callGeminiAPI(prompt, relatedWordsLoading, llmRelatedWordsContent);
+
+            generateExamplesButton.disabled = false;
+            simplifyDefinitionButton.disabled = false;
+            getNameMeaningButton.disabled = false;
+            suggestRelatedWordsButton.disabled = false;
+        }
+
+
+        // --- End LLM Powered Features ---
+
+
+        // Main search function
+        async function searchWord() {
+            const word = wordInput.value.trim();
+            const selectedLanguage = languageSelect.value;
+            clearResults();
+
+            if (!word) {
+                displayError("Please enter a word or phrase to search.");
+                return;
+            }
+
+            try {
+                const data = await fetchWordDefinition(word, selectedLanguage);
+
+                if (data && data.length > 0) {
+                    const entry = data[0];
+
+                    wordDisplay.textContent = entry.word;
+                    phoneticDisplay.textContent = entry.phonetic || '';
+
+                    const audioUrl = entry.phonetics.find(p => p.audio && p.audio.startsWith('//'))?.audio;
+
+                    if (audioUrl) {
+                        const fullAudioUrl = `https:${audioUrl}`;
+                        audioButton.onclick = () => {
+                            const audio = new Audio(fullAudioUrl);
+                            audio.play().catch(e => console.error("Audio playback error:", e));
+                        };
+                        audioButton.classList.remove('hidden');
+                    } else {
+                        audioButton.onclick = () => speakWord(entry.word, selectedLanguage);
+                        audioButton.classList.remove('hidden');
+                    }
+
+
+                    entry.meanings.forEach(meaning => {
+                        const meaningDiv = document.createElement('div');
+                        meaningDiv.classList.add('mb-4');
+
+                        const partOfSpeechHeader = document.createElement('h3');
+                        partOfSpeechHeader.classList.add('text-xl', 'font-semibold', 'text-gray-700', 'mb-2', 'part-of-speech');
+                        partOfSpeechHeader.textContent = meaning.partOfSpeech;
+                        meaningDiv.appendChild(partOfSpeechHeader);
+
+                        const definitionsList = document.createElement('ul');
+                        definitionsList.classList.add('list-none', 'pl-0', 'definition-list');
+
+                        meaning.definitions.forEach(def => {
+                            const listItem = document.createElement('li');
+                            listItem.classList.add('text-lg', 'text-gray-800', 'leading-relaxed');
+                            listItem.innerHTML = def.definition;
+                            if (def.example) {
+                                listItem.innerHTML += `<p class="text-sm italic text-gray-500 mt-1 ml-4">"${def.example}"</p>`;
+                            }
+                            definitionsList.appendChild(listItem);
+                        });
+                        meaningDiv.appendChild(definitionsList);
+                        meaningsContainer.appendChild(meaningDiv);
+                    });
+
+                    resultsDiv.classList.remove('hidden');
+                    generateExamplesButton.disabled = false;
+                    simplifyDefinitionButton.disabled = false;
+                    getNameMeaningButton.disabled = false;
+                    suggestRelatedWordsButton.disabled = false;
+
+                } else {
+                    displayError(`No dictionary definitions found for "${word}" in ${languageSelect.options[languageSelect.selectedIndex].text}. You can still try the AI features below for related information.`);
+                    // Even if dictionary fails, enable LLM buttons for phrase-based queries
+                    resultsDiv.classList.remove('hidden'); // Show results section to reveal LLM buttons
+                    generateExamplesButton.disabled = false;
+                    simplifyDefinitionButton.disabled = false;
+                    getNameMeaningButton.disabled = false;
+                    suggestRelatedWordsButton.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error fetching definition:", error);
+                displayError("An error occurred while fetching the definition. Please check your internet connection and try again.");
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+
+        // Store the original English word when the input changes
+        wordInput.addEventListener('input', () => {
+            originalInputWord = wordInput.value;
+        });
+
+        // Event listener for language selection change
+        languageSelect.addEventListener('change', async () => {
+            const selectedLanguage = languageSelect.value;
+            if (selectedLanguage === 'ar' || selectedLanguage === 'fa') {
+                wordInput.setAttribute('dir', 'rtl');
+            } else {
+                wordInput.setAttribute('dir', 'ltr');
+            }
+
+            if (originalInputWord) {
+                const translated = await translateInputWord(originalInputWord, selectedLanguage);
+                wordInput.value = translated;
+            } else if (selectedLanguage === 'en') {
+                wordInput.value = '';
+            }
+
+            wordInput.focus();
+        });
+
+        // Event listeners
+        searchButton.addEventListener('click', searchWord);
+        wordInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                searchWord();
+            }
+        });
+
+        // LLM Feature button listeners
+        generateExamplesButton.addEventListener('click', generateLLMExamples);
+        simplifyDefinitionButton.addEventListener('click', simplifyLLMDefinition);
+        getNameMeaningButton.addEventListener('click', getNameMeaning);
+        suggestRelatedWordsButton.addEventListener('click', suggestRelatedWords);
+    </script>
+</body>
+</html>
